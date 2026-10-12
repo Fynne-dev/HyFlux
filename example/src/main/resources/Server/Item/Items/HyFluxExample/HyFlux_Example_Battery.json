@@ -1,0 +1,52 @@
+{
+  "TranslationProperties": {
+    "Name": "hyfluxexample.items.HyFlux_Example_Battery.name",
+    "Description": "hyfluxexample.items.HyFlux_Example_Battery.description"
+  },
+  "ItemLevel": 5,
+  "Quality": "Uncommon",
+  "MaxStack": 64,
+  "Categories": [
+    "Blocks.Metal"
+  ],
+  "PlayerAnimationsId": "Block",
+  "BlockType": {
+    "Material": "Solid",
+    "DrawType": "Cube",
+    "Group": "Metal",
+    "HitboxType": "Full",
+    "Flags": {},
+    "Gathering": {
+      "Breaking": {
+        "GatherType": "Rocks",
+        "ItemId": "HyFlux_Example_Battery"
+      }
+    },
+    "BlockParticleSetId": "Metal",
+    "Textures": [
+      {
+        "Weight": 1,
+        "Sides": "BlockTextures/Metal_Iron_Ornate.png",
+        "UpDown": "BlockTextures/Metal_Iron_Decorative_Top.png"
+      }
+    ],
+    "ParticleColor": "#9a9a9a",
+    "BlockSoundSetId": "Metal",
+    "PhysicalMaterialId": "Metal",
+    "CubeShadingMode": "Standard"
+  },
+  "IconProperties": {
+    "Scale": 0.58823,
+    "Rotation": [
+      22.5,
+      45,
+      22.5
+    ],
+    "Translation": [
+      0,
+      -13.5
+    ]
+  },
+  "Icon": "Icons/ItemsGenerated/Metal_Iron_Ornate.png",
+  "ItemSoundSetId": "ISS_Items_Metal"
+}

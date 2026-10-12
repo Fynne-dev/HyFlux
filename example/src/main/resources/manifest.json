@@ -1,0 +1,22 @@
+{
+  "Group": "HyFlux",
+  "Name": "HyFluxExample",
+  "Version": "${version}",
+  "Description": "Example content for the HyFlux energy API: a generator, cable, battery and lamp.",
+  "Authors": [
+    {
+      "Name": "andoripuratama"
+    }
+  ],
+  "Website": "",
+  "Main": "dev.hyflux.example.HyFluxExamplePlugin",
+  "ServerVersion": "*",
+  "Dependencies": {
+    "HyFlux:HyFlux": "*"
+  },
+  "OptionalDependencies": {},
+  "LoadBefore": {},
+  "DisabledByDefault": false,
+  "IncludesAssetPack": true,
+  "SubPlugins": []
+}

@@ -1,0 +1,20 @@
+{
+  "Group": "HyFlux",
+  "Name": "HyFlux",
+  "Version": "${version}",
+  "Description": "Energy network API inspired by Redstone Flux: producers, consumers, batteries and cables that other mods can build on.",
+  "Authors": [
+    {
+      "Name": "andoripuratama"
+    }
+  ],
+  "Website": "",
+  "Main": "dev.hyflux.plugin.HyFluxPlugin",
+  "ServerVersion": "*",
+  "Dependencies": {},
+  "OptionalDependencies": {},
+  "LoadBefore": {},
+  "DisabledByDefault": false,
+  "IncludesAssetPack": false,
+  "SubPlugins": []
+}

@@ -1,0 +1,9 @@
+# HyFlux example blocks
+items.HyFlux_Example_Generator.name = Flux Generator
+items.HyFlux_Example_Generator.description = Generates 40 HF per tick. Connect it to cables, batteries and machines.
+items.HyFlux_Example_Cable.name = Flux Cable
+items.HyFlux_Example_Cable.description = Carries up to 256 HF per tick between connected energy blocks.
+items.HyFlux_Example_Battery.name = Flux Battery
+items.HyFlux_Example_Battery.description = Stores 100,000 HF. Charges from surplus and powers machines when generators fall short.
+items.HyFlux_Example_Lamp.name = Flux Lamp
+items.HyFlux_Example_Lamp.description = Uses 10 HF per tick and lights up while it has power.

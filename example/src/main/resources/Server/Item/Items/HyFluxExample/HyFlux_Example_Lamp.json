@@ -1,0 +1,68 @@
+{
+  "TranslationProperties": {
+    "Name": "hyfluxexample.items.HyFlux_Example_Lamp.name",
+    "Description": "hyfluxexample.items.HyFlux_Example_Lamp.description"
+  },
+  "ItemLevel": 5,
+  "Quality": "Uncommon",
+  "MaxStack": 64,
+  "Categories": [
+    "Blocks.Metal"
+  ],
+  "PlayerAnimationsId": "Block",
+  "BlockType": {
+    "Material": "Solid",
+    "DrawType": "Cube",
+    "Group": "Metal",
+    "HitboxType": "Full",
+    "Flags": {},
+    "Gathering": {
+      "Breaking": {
+        "GatherType": "Rocks",
+        "ItemId": "HyFlux_Example_Lamp"
+      }
+    },
+    "BlockParticleSetId": "Metal",
+    "Textures": [
+      {
+        "Weight": 1,
+        "Sides": "BlockTextures/Rock_Crystal_Blue.png",
+        "UpDown": "BlockTextures/Rock_Crystal_Blue_Top.png"
+      }
+    ],
+    "ParticleColor": "#5f8fff",
+    "BlockSoundSetId": "Metal",
+    "PhysicalMaterialId": "Metal",
+    "CubeShadingMode": "Standard",
+    "State": {
+      "Definitions": {
+        "On": {
+          "Light": {
+            "Color": "#cef"
+          },
+          "Textures": [
+            {
+              "Weight": 1,
+              "Sides": "BlockTextures/Rock_Crystal_Cyan.png",
+              "UpDown": "BlockTextures/Rock_Crystal_Cyan_Top.png"
+            }
+          ]
+        }
+      }
+    }
+  },
+  "IconProperties": {
+    "Scale": 0.58823,
+    "Rotation": [
+      22.5,
+      45,
+      22.5
+    ],
+    "Translation": [
+      0,
+      -13.5
+    ]
+  },
+  "Icon": "Icons/ItemsGenerated/Rock_Crystal_Blue.png",
+  "ItemSoundSetId": "ISS_Items_Metal"
+}
