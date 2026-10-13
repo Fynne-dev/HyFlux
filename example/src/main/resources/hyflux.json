@@ -1,0 +1,7 @@
+{
+  "Blocks": {
+    "HyFlux_Example_Cable": { "Type": "Cable", "Rate": 256 },
+    "HyFlux_Example_Battery": { "Type": "Battery", "Capacity": 100000, "Rate": 500 },
+    "HyFlux_Example_Lamp": { "Type": "Machine", "Capacity": 200, "Input": 20, "Usage": 10, "ActiveState": "On" }
+  }
+}

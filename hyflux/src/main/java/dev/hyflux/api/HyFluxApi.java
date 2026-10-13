@@ -2,6 +2,7 @@ package dev.hyflux.api;
 
 import com.hypixel.hytale.server.core.universe.world.World;
 import dev.hyflux.api.event.EnergyListener;
+import dev.hyflux.api.math.BlockPos;
 import dev.hyflux.api.network.EnergyWorld;
 import dev.hyflux.api.registry.BlockEnergyRegistry;
 import dev.hyflux.api.registry.ItemEnergyRegistry;
@@ -35,6 +36,18 @@ public interface HyFluxApi {
 
     /** The Hytale world behind an energy world, or null if it is not backed by one. */
     World getHytaleWorld(EnergyWorld world);
+
+    /** The id of the block at a position, or null if its chunk is not loaded. Call on the world thread. */
+    String getBlockId(World world, BlockPos pos);
+
+    /**
+     * Places a block and immediately creates (or removes) its energy node. Returns false if the
+     * block id is unknown or the chunk is not loaded. Call on the world thread.
+     */
+    boolean placeBlock(World world, BlockPos pos, String blockTypeId);
+
+    /** Switches a block to one of its state variants ({@code "default"} for the normal look). Call on the world thread. */
+    boolean setBlockState(World world, BlockPos pos, String state);
 
     void addListener(EnergyListener listener);
 

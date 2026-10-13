@@ -10,7 +10,7 @@
   ],
   "Website": "",
   "Main": "dev.hyflux.plugin.HyFluxPlugin",
-  "ServerVersion": "*",
+  "ServerVersion": ">=0.7.0",
   "Dependencies": {},
   "OptionalDependencies": {},
   "LoadBefore": {},

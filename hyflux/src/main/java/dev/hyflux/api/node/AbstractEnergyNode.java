@@ -26,6 +26,8 @@ public abstract class AbstractEnergyNode implements EnergyNode {
     private final Set<Direction> disabledSides = EnumSet.noneOf(Direction.class);
     private int priority;
     private NodeContext context;
+    private String activeState;
+    private Boolean shownActive;
 
     /**
      * @param role    the node role
@@ -81,6 +83,35 @@ public abstract class AbstractEnergyNode implements EnergyNode {
         }
     }
 
+    /**
+     * Names the block state to show while this generator or machine is running, for example
+     * {@code "On"} for a state defined under {@code BlockType.State.Definitions} in the block JSON.
+     * The block switches back to its normal look when it stops. Null (the default) disables this.
+     */
+    public void setActiveState(String state) {
+        this.activeState = state == null || state.isBlank() ? null : state;
+        this.shownActive = null;
+    }
+
+    public String getActiveState() {
+        return activeState;
+    }
+
+    /**
+     * Shows the active state while {@code active} is true and the normal look otherwise. Called
+     * every tick by {@link ProducerNode} and {@link ConsumerNode}; re-applied every 2 seconds in
+     * case something else changed the block.
+     */
+    protected void showActive(NodeContext context, boolean active) {
+        if (activeState == null) {
+            return;
+        }
+        if (shownActive == null || shownActive != active || context.currentTick() % 60 == 0) {
+            shownActive = active;
+            context.setBlockState(active ? activeState : "default");
+        }
+    }
+
     /** The context while attached, otherwise null. */
     public NodeContext getContext() {
         return context;
@@ -124,9 +155,7 @@ public abstract class AbstractEnergyNode implements EnergyNode {
         if (storage != null) {
             storage.save(data);
         }
-        if (priority != 0) {
-            data.putInt(KEY_PRIORITY, priority);
-        }
+        data.putInt(KEY_PRIORITY, priority);
         if (!disabledSides.isEmpty()) {
             StringJoiner joiner = new StringJoiner(",");
             disabledSides.forEach(d -> joiner.add(d.name()));
@@ -140,7 +169,7 @@ public abstract class AbstractEnergyNode implements EnergyNode {
         if (storage != null) {
             storage.load(data);
         }
-        priority = data.getInt(KEY_PRIORITY, 0);
+        priority = data.getInt(KEY_PRIORITY, priority); // keep the factory default when absent
         disabledSides.clear();
         String sides = data.getString(KEY_DISABLED_SIDES, "");
         for (String name : sides.split(",")) {

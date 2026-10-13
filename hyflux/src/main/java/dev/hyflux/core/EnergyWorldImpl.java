@@ -46,6 +46,10 @@ public class EnergyWorldImpl implements EnergyWorld {
             return world.getNode(pos);
         }
 
+        /** Switches the block at a position to one of its state variants ("default" = normal look). */
+        default void setBlockState(BlockPos pos, String state) {
+        }
+
         /** Throws if called from the wrong thread. */
         default void checkThread() {
         }

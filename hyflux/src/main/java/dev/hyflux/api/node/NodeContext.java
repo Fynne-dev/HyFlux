@@ -39,4 +39,11 @@ public interface NodeContext {
 
     /** Asks HyFlux to include this node in the next save. Call it after changing state you write in {@code save}. */
     void markDirty();
+
+    /**
+     * Switches the node's block to one of its state variants, as defined under
+     * {@code BlockType.State.Definitions} in the block JSON ({@code "default"} for the normal look).
+     * Does nothing for nodes without a block or if the block already shows that state.
+     */
+    void setBlockState(String state);
 }

@@ -2,9 +2,7 @@ package dev.hyflux.example;
 
 import com.hypixel.hytale.component.Ref;
 import com.hypixel.hytale.component.Store;
-import com.hypixel.hytale.math.util.ChunkUtil;
 import com.hypixel.hytale.server.core.Message;
-import com.hypixel.hytale.server.core.asset.type.blocktype.config.BlockType;
 import com.hypixel.hytale.server.core.command.system.CommandContext;
 import com.hypixel.hytale.server.core.command.system.arguments.system.RequiredArg;
 import com.hypixel.hytale.server.core.command.system.arguments.types.ArgTypes;
@@ -82,15 +80,14 @@ final class DemoCommand extends AbstractCommandCollection {
         BlockPos end = origin.offset(Direction.EAST, layout.length - 1);
         var chunks = world.getChunkStore();
         CompletableFuture.allOf(
-                chunks.getChunkReferenceAsync(ChunkUtil.indexChunkFromBlock(origin.x(), origin.z())),
-                chunks.getChunkReferenceAsync(ChunkUtil.indexChunkFromBlock(end.x(), end.z())))
+                chunks.getChunkSectionReferenceAtBlockAsync(origin.x(), origin.y(), origin.z()),
+                chunks.getChunkSectionReferenceAtBlockAsync(end.x(), end.y(), end.z()))
             .thenRunAsync(() -> {
                 EnergyWorld energy = HyFlux.world(world);
                 for (int i = 0; i < layout.length; i++) {
                     BlockPos p = origin.offset(Direction.EAST, i);
-                    world.setBlock(p.x(), p.y(), p.z(), layout[i]);
-                    // Placing from code skips the player place event, so tell HyFlux about it.
-                    energy.refreshBlock(p);
+                    // placeBlock also creates the block's energy node right away.
+                    HyFlux.placeBlock(world, p, layout[i]);
                 }
                 EnergyNetwork network = energy.getNetwork(origin);
                 ctx.sendMessage(Message.raw("Built a demo rig from " + origin.toShortString() + " to " + end.toShortString()
@@ -108,9 +105,9 @@ final class DemoCommand extends AbstractCommandCollection {
         for (int i = 0; i < LAYOUT.length; i++) {
             BlockPos p = origin.offset(Direction.EAST, i);
             EnergyNode node = energy.getNode(p);
-            BlockType block = world.getBlockType(p.x(), p.y(), p.z());
+            String block = HyFlux.getBlockId(world, p);
             StringBuilder line = new StringBuilder(p.toShortString()).append(" ")
-                .append(block == null ? "?" : block.getId()).append(": ");
+                .append(block == null ? "?" : block).append(": ");
             if (node == null) {
                 line.append("no node");
             } else {

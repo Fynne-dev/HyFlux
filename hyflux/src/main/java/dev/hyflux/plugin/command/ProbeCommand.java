@@ -2,7 +2,6 @@ package dev.hyflux.plugin.command;
 
 import com.hypixel.hytale.component.Ref;
 import com.hypixel.hytale.component.Store;
-import com.hypixel.hytale.server.core.asset.type.blocktype.config.BlockType;
 import com.hypixel.hytale.server.core.command.system.CommandContext;
 import com.hypixel.hytale.server.core.command.system.basecommands.AbstractPlayerCommand;
 import com.hypixel.hytale.server.core.universe.PlayerRef;
@@ -46,8 +45,8 @@ final class ProbeCommand extends AbstractPlayerCommand {
         EnergyWorld energy = service.getWorld(world);
         EnergyNode node = energy.refreshBlock(pos);
         if (node == null) {
-            BlockType type = world.getBlockType(pos.x(), pos.y(), pos.z());
-            Msg.note(ctx, "No energy node at " + pos + " (block " + (type == null ? "unknown" : type.getId()) + ").");
+            String block = service.getBlockId(world, pos);
+            Msg.note(ctx, "No energy node at " + pos + " (block " + (block == null ? "unknown" : block) + ").");
             return;
         }
         describe(ctx, energy, pos, node);

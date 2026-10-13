@@ -44,6 +44,7 @@ public class ConsumerNode extends AbstractEnergyNode {
             powered = ran;
             onPoweredChanged(context, ran);
         }
+        showActive(context, ran);
     }
 
     /** Whether the machine has something to do this tick. Return false to idle without using energy. */

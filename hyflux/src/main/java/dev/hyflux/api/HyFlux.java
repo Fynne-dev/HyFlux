@@ -2,6 +2,7 @@ package dev.hyflux.api;
 
 import com.hypixel.hytale.server.core.universe.world.World;
 import dev.hyflux.api.event.EnergyListener;
+import dev.hyflux.api.math.BlockPos;
 import dev.hyflux.api.network.EnergyWorld;
 import dev.hyflux.api.node.NodeContext;
 import dev.hyflux.api.registry.BlockEnergyRegistry;
@@ -80,6 +81,21 @@ public final class HyFlux {
     /** The Hytale world a node lives in, or null. */
     public static World hytaleWorld(NodeContext context) {
         return api().getHytaleWorld(context.world());
+    }
+
+    /** The id of the block at a position, or null if its chunk is not loaded. */
+    public static String getBlockId(World world, BlockPos pos) {
+        return api().getBlockId(world, pos);
+    }
+
+    /** Places a block and immediately creates (or removes) its energy node. Returns false if it could not be placed. */
+    public static boolean placeBlock(World world, BlockPos pos, String blockTypeId) {
+        return api().placeBlock(world, pos, blockTypeId);
+    }
+
+    /** Switches a block to one of its state variants ({@code "default"} for the normal look). */
+    public static boolean setBlockState(World world, BlockPos pos, String state) {
+        return api().setBlockState(world, pos, state);
     }
 
     public static void addListener(EnergyListener listener) {

@@ -122,6 +122,26 @@ public final class HyFluxService implements HyFluxApi {
     }
 
     @Override
+    public String getBlockId(World world, BlockPos pos) {
+        var type = ChunkAccess.blockType(world, pos.x(), pos.y(), pos.z());
+        return type == null ? null : type.getId();
+    }
+
+    @Override
+    public boolean placeBlock(World world, BlockPos pos, String blockTypeId) {
+        if (!ChunkAccess.setBlock(world, pos.x(), pos.y(), pos.z(), blockTypeId)) {
+            return false;
+        }
+        state(world).energy.refreshBlock(pos);
+        return true;
+    }
+
+    @Override
+    public boolean setBlockState(World world, BlockPos pos, String state) {
+        return ChunkAccess.setBlockState(world, pos.x(), pos.y(), pos.z(), state);
+    }
+
+    @Override
     public void addListener(EnergyListener listener) {
         listeners.add(Objects.requireNonNull(listener, "listener"));
     }
@@ -275,6 +295,14 @@ public final class HyFluxService implements HyFluxApi {
             return;
         }
         bindingsChecked = true;
+        try {
+            int fromFiles = BlockDefinitions.loadAll(this, plugin.getDataDirectory(), plugin.getFile());
+            if (fromFiles > 0) {
+                logInfo("Loaded " + fromFiles + " energy blocks from " + BlockDefinitions.FILE_NAME + " files");
+            }
+        } catch (Throwable t) {
+            logError("Could not load " + BlockDefinitions.FILE_NAME + " files", t);
+        }
         try {
             var assets = BlockType.getAssetMap();
             for (var binding : blocks.all().entrySet()) {

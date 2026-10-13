@@ -12,12 +12,13 @@ the energy every tick, saves it, and cleans up when blocks are broken.
 - Priorities, per-tick rate limits and cable throughput tiers
 - Saving per world, energy on items, event listeners, and `/hyflux` admin commands
 
-Tested against Hytale server **0.6.8** (Java 25).
+Works with Hytale server **0.7** (Java 25).
 
 ## Contents
 
 - [Installing](#installing-server-owners)
-- [Tutorial: your first HyFlux mod](#tutorial-your-first-hyflux-mod)
+- [Quick start: energy blocks without Java](#quick-start-energy-blocks-without-java)
+- [Tutorial: your first HyFlux mod (Java)](#tutorial-your-first-hyflux-mod-java)
 - [How energy moves](#how-energy-moves)
 - [API recipes](#api-recipes)
 - [API reference](#api-reference)
@@ -31,7 +32,50 @@ Put `HyFlux-1.0.0.jar` in your `Mods` folder (singleplayer: `%APPDATA%/Hytale/Us
 HyFlux adds no blocks of its own; install the mods that use it. `HyFluxExample-1.0.0.jar` adds a
 demo Flux Generator, Flux Cable, Flux Battery and Flux Lamp.
 
-## Tutorial: your first HyFlux mod
+## Quick start: energy blocks without Java
+
+The simplest way to use HyFlux needs **no code**. Add a file called `hyflux.json` to the root of
+your mod (next to `manifest.json`) and list your blocks:
+
+```json
+{
+  "Blocks": {
+    "MyMod_Generator": { "Type": "Generator", "Capacity": 8000, "Output": 120, "Generation": 60, "ActiveState": "On" },
+    "MyMod_Cable":     { "Type": "Cable", "Rate": 256 },
+    "MyMod_Battery":   { "Type": "Battery", "Capacity": 500000, "Rate": 1000 },
+    "MyMod_Lamp":      { "Type": "Machine", "Capacity": 200, "Input": 20, "Usage": 10, "ActiveState": "On" }
+  }
+}
+```
+
+Each key is the id of a block in your asset pack (the block item's file name). Then add HyFlux
+to the `Dependencies` in your `manifest.json`:
+
+```json
+"Dependencies": { "HyFlux:HyFlux": "*" }
+```
+
+That's all. HyFlux finds `hyflux.json` in every installed mod when the world loads. A mod with
+only a manifest, block JSON files and `hyflux.json` (no Java, no `Main`) works too.
+
+| `Type` | Settings (HF and HF per tick) |
+|---|---|
+| `Generator` | `Capacity` (buffer), `Output` (most it gives per tick), `Generation` (made per tick) |
+| `Machine` | `Capacity` (buffer), `Input` (most it takes per tick), `Usage` (used per working tick) |
+| `Battery` | `Capacity`, `Rate` (in and out per tick), or separate `Input` and `Output` |
+| `Cable` | `Rate` (most the cable network moves per tick) |
+
+Every type also accepts `Priority` (higher is served first). Generators and machines accept
+`ActiveState`: the name of a block state to show while running, defined under
+`BlockType.State.Definitions` in the block JSON (see [step 3](#step-3-define-the-blocks)). The
+block switches back to its normal look when it stops.
+
+Server owners can power blocks from any mod, including vanilla ones, without touching that mod:
+put the same kind of file in `mods/HyFlux_HyFlux/blocks/` (any name ending in `.json`).
+
+Use the Java API below when a block needs its own logic: fuel, warm-up, recipes or custom saving.
+
+## Tutorial: your first HyFlux mod (Java)
 
 In this tutorial you build a small mod with four blocks:
 
@@ -117,7 +161,7 @@ HyFlux load before your mod and lets your code use its classes:
   "Description": "Machines powered by HyFlux",
   "Authors": [{ "Name": "MyName" }],
   "Main": "com.example.mymod.MyModPlugin",
-  "ServerVersion": "*",
+  "ServerVersion": ">=0.7.0",
   "Dependencies": {
     "HyFlux:HyFlux": "*"
   },
@@ -253,15 +297,10 @@ spends `usagePerTick` HF and runs `doWork`. If there is not enough energy, it pa
 ```java
 package com.example.mymod;
 
-import com.hypixel.hytale.server.core.asset.type.blocktype.config.BlockType;
-import com.hypixel.hytale.server.core.universe.world.World;
-import dev.hyflux.api.HyFlux;
-import dev.hyflux.api.math.BlockPos;
 import dev.hyflux.api.node.ConsumerNode;
 import dev.hyflux.api.node.NodeContext;
 import dev.hyflux.api.node.NodeData;
 import dev.hyflux.api.node.NodeType;
-import org.joml.Vector3i;
 
 /** A machine that uses 40 HF per tick and finishes one item every 3 seconds. */
 public final class ElectricGrinderNode extends ConsumerNode {
@@ -275,6 +314,7 @@ public final class ElectricGrinderNode extends ConsumerNode {
 
     public ElectricGrinderNode() {
         super(10_000, 200, 40); // holds 10000 HF, takes in up to 200 HF/t, uses 40 HF per working tick
+        setActiveState("On");   // show the block's "On" state (step 3) while it runs
     }
 
     @Override
@@ -289,20 +329,6 @@ public final class ElectricGrinderNode extends ConsumerNode {
             progress = 0;
             itemsMade++;
             // Your machine's job goes here: turn an input item into an output, drop a product, ...
-        }
-    }
-
-    @Override
-    protected void onPoweredChanged(NodeContext context, boolean powered) {
-        // Switch the block to its "On" state while running (defined in the block JSON).
-        World world = HyFlux.hytaleWorld(context);
-        if (world == null) {
-            return;
-        }
-        BlockPos p = context.pos();
-        BlockType block = world.getBlockType(p.x(), p.y(), p.z());
-        if (block != null) {
-            world.setBlockInteractionState(new Vector3i(p.x(), p.y(), p.z()), block, powered ? "On" : "default");
         }
     }
 
@@ -328,8 +354,9 @@ public final class ElectricGrinderNode extends ConsumerNode {
 }
 ```
 
-Switching to the `On` state is safe: state variants share their block's binding, so the machine
-keeps its node and its energy.
+`setActiveState("On")` switches the block to its `On` state while the machine runs and back when
+it stops. State variants share their block's binding, so the machine keeps its node and energy.
+For other effects (sounds, particles), override `onPoweredChanged(context, powered)`.
 
 ### Step 6: Bind the blocks in your plugin
 
@@ -482,12 +509,17 @@ for (EnergyNetwork network : energy.getNetworksAt(pos)) {
 ### Place energy blocks from code
 
 Player placing and breaking is detected for you, and breaks that skip events (explosions,
-commands) are caught by a background check. When your code *places* a bound block, tell HyFlux:
+commands) are caught by a background check. To place a block from code, use `HyFlux.placeBlock`,
+which also creates the block's energy node right away:
 
 ```java
-world.setBlock(x, y, z, "MyMod_Battery");
-HyFlux.world(world).refreshBlock(new BlockPos(x, y, z));
+HyFlux.placeBlock(world, new BlockPos(x, y, z), "MyMod_Battery");     // false if the chunk isn't loaded
+String id = HyFlux.getBlockId(world, new BlockPos(x, y, z));            // null if the chunk isn't loaded
+HyFlux.setBlockState(world, new BlockPos(x, y, z), "On");              // or "default" for the normal look
 ```
+
+These helpers use Hytale's current block API for you, so your mod doesn't break when Hytale
+changes it. If you place blocks some other way, call `HyFlux.world(world).refreshBlock(pos)` afterwards.
 
 ### Choose which sides connect, and priorities
 
@@ -579,15 +611,15 @@ internal and may change. The javadoc jar (`HyFlux-1.0.0-javadoc.jar`) documents 
 
 | Class | Package | Use it to |
 |---|---|---|
-| `HyFlux` | `api` | Get everything else: `blocks()`, `items()`, `nodeTypes()`, `world(World)`, `hytaleWorld(...)`, `addListener(...)` |
+| `HyFlux` | `api` | Get everything else: `blocks()`, `items()`, `nodeTypes()`, `world(World)`, `hytaleWorld(...)`, `addListener(...)`, and the block helpers `placeBlock`, `getBlockId`, `setBlockState` |
 | `ProducerNode` | `api.node` | Make a generator (`getGeneration`, `generate`, `getLastGenerated`) |
 | `ConsumerNode` | `api.node` | Make a machine (`canWork`, `doWork`, `onPoweredChanged`, `isPowered`) |
 | `BatteryNode` | `api.node` | Make a battery |
 | `CableNode` | `api.node` | Make a cable with a transfer rate |
-| `AbstractEnergyNode` | `api.node` | Shared base: `getStorage()`, `setPriority`, `setSideEnabled`, `writeData`/`readData`, `onAdded`/`onRemoved`, `getContext()` |
+| `AbstractEnergyNode` | `api.node` | Shared base: `getStorage()`, `setPriority`, `setSideEnabled`, `setActiveState`, `writeData`/`readData`, `onAdded`/`onRemoved`, `getContext()` |
 | `EnergyNode` | `api.node` | Implement a node from scratch when the base classes don't fit |
 | `NodeType` | `api.node` | Name a kind of node: `NodeType.of("mymod:id", MyNode::new)` |
-| `NodeContext` | `api.node` | Passed to node callbacks: `pos()`, `world()`, `network()`, `networks()`, `markDirty()` |
+| `NodeContext` | `api.node` | Passed to node callbacks: `pos()`, `world()`, `network()`, `networks()`, `markDirty()`, `setBlockState(...)` |
 | `NodeData` | `api.node` | Save and load your node's fields |
 | `EnergyWorld` | `api.network` | Per-world access: `getNode`, `getStorage`, `getFlow`, `getNetwork`, `getNetworksAt`, `refreshBlock`, `addNode`, `removeNode` |
 | `EnergyNetwork` | `api.network` | A cable network: `getLastStats`, `getStoredEnergy`, `getTransferLimit`, `count(role)` |
@@ -611,8 +643,10 @@ internal and may change. The javadoc jar (`HyFlux-1.0.0-javadoc.jar`) documents 
 - **A node type id is changed after release.** The id (`"mymod:grinder"`) is how saves find your
   node class; renaming it orphans every placed block of that type.
 - **`EnergyWorld` is called from another thread.** Use `world.execute(() -> ...)`.
-- **Blocks are placed from code without `refreshBlock`.** HyFlux only sees player placements by
-  itself.
+- **Blocks are placed from code with Hytale's own calls.** HyFlux only sees player placements by
+  itself. Use `HyFlux.placeBlock(...)`, or call `refreshBlock(pos)` afterwards.
+- **A block id in `hyflux.json` doesn't match the block's file name.** At startup the server log
+  warns about every bound block id that doesn't exist, and about invalid entries, naming the file.
 - **Machines touching each other are expected to share.** They don't; connect them with cables or
   put a generator or battery next to them.
 - **An energy item has `MaxStack` above 1.** Energy is per stack, so stacked items share one charge.
@@ -679,9 +713,13 @@ example/      a mod built on HyFlux: Flux Generator, Flux Cable, Flux Battery, F
 
 ## Status
 
-Tested on Hytale server 0.6.8: placing and breaking blocks in game, generators, machines,
-batteries and cables, blocks touching, separate cable runs, unloaded chunks, and saving across
-restarts. Not yet tested in game: the energy item helpers and HyFlux as an optional dependency.
+Built and tested against Hytale server **0.7.0** on a headless server:
+- generators, machines, batteries and cables, both touching and on cable runs
+- separate cable runs, unloaded chunks, and saving across restarts
+- `hyflux.json` loading from a Java mod and from a content-only mod with no Java
+
+On 0.6.8 it was also tested by placing and breaking blocks in the game client. That hasn't been
+repeated on 0.7 yet, and neither has the energy item helpers or HyFlux as an optional dependency.
 
 ## License
 

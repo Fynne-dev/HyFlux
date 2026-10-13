@@ -33,10 +33,11 @@ public class ProducerNode extends AbstractEnergyNode {
         this.generationPerTick = Math.max(0, generationPerTick);
     }
 
-    /** Generates energy. If you override this, call {@link #generate(long)} yourself. */
+    /** Generates energy. If you override this, call {@code super.tick(context)} or {@link #generate(long)} yourself. */
     @Override
     public void tick(NodeContext context) {
         lastGenerated = generate(getGeneration(context));
+        showActive(context, lastGenerated > 0);
     }
 
     /** How much to generate this tick. Override for fuel, weather or time-of-day logic. */

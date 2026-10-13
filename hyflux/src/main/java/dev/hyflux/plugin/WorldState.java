@@ -6,7 +6,6 @@ import com.google.gson.JsonObject;
 import com.hypixel.hytale.math.util.ChunkUtil;
 import com.hypixel.hytale.server.core.asset.type.blocktype.config.BlockType;
 import com.hypixel.hytale.server.core.universe.world.World;
-import com.hypixel.hytale.server.core.universe.world.chunk.BlockChunk;
 import dev.hyflux.api.event.EnergyListener;
 import dev.hyflux.api.math.BlockPos;
 import dev.hyflux.api.node.DetachReason;
@@ -77,11 +76,10 @@ final class WorldState implements EnergyWorldImpl.Host {
 
     @Override
     public EnergyNode refreshBlock(EnergyWorldImpl w, BlockPos pos) {
-        BlockChunk chunk = ChunkAccess.blockChunk(world, pos.x(), pos.z());
-        if (chunk == null) {
+        BlockType blockType = ChunkAccess.blockType(world, pos.x(), pos.y(), pos.z());
+        if (blockType == null) {
             return energy.getNode(pos); // Cannot see the block; leave the node as it is.
         }
-        BlockType blockType = ChunkAccess.blockType(chunk, pos.x(), pos.y(), pos.z());
         String blockId = blockType == null ? null : blockType.getId();
         NodeType binding = blockId == null ? null : service.blocks().getBinding(blockId);
         NodeType current = energy.getNodeType(pos);
@@ -123,6 +121,11 @@ final class WorldState implements EnergyWorldImpl.Host {
     @Override
     public Collection<EnergyListener> listeners() {
         return service.listeners();
+    }
+
+    @Override
+    public void setBlockState(BlockPos pos, String state) {
+        ChunkAccess.setBlockState(world, pos.x(), pos.y(), pos.z(), state);
     }
 
     @Override

@@ -4,18 +4,24 @@ import com.hypixel.hytale.component.Ref;
 import com.hypixel.hytale.math.util.ChunkUtil;
 import com.hypixel.hytale.server.core.asset.type.blocktype.config.BlockType;
 import com.hypixel.hytale.server.core.universe.world.World;
-import com.hypixel.hytale.server.core.universe.world.chunk.BlockChunk;
+import com.hypixel.hytale.server.core.universe.world.chunk.BlockOperations;
+import com.hypixel.hytale.server.core.universe.world.chunk.section.BlockSection;
 import com.hypixel.hytale.server.core.universe.world.storage.ChunkStore;
+import dev.hyflux.api.registry.BlockEnergyRegistry;
 
 /**
- * Block lookups that never load chunks. Goes through the chunk store components rather
- * than the deprecated {@code WorldChunk} accessors. Call on the world thread.
+ * Every block read and write HyFlux makes, in one place, written against the Hytale 0.7 chunk
+ * API (chunk sections, {@link BlockSection} and {@link BlockOperations}). Lookups never load
+ * chunks. Call on the world thread.
  */
 final class ChunkAccess {
 
-    /** World build height used by the server for block lookups. */
+    /** Vertical range scanned by {@code /hyflux scan}. */
     static final int MIN_Y = 0;
     static final int MAX_Y = 319;
+
+    /** State name of a block's normal look. */
+    static final String DEFAULT_STATE = "default";
 
     private ChunkAccess() {
     }
@@ -29,16 +35,54 @@ final class ChunkAccess {
         return isLoaded(world, ChunkUtil.indexChunkFromBlock(blockX, blockZ));
     }
 
-    /** The block chunk containing a column, or null if that chunk is not loaded. */
-    static BlockChunk blockChunk(World world, int blockX, int blockZ) {
-        return world.getChunkStore().getChunkComponent(ChunkUtil.indexChunkFromBlock(blockX, blockZ), BlockChunk.getComponentType());
+    /** The loaded chunk section holding a block, or null if it is not in memory. */
+    private static Ref<ChunkStore> section(World world, int x, int y, int z) {
+        Ref<ChunkStore> ref = world.getChunkStore().getChunkSectionReferenceAtBlock(x, y, z);
+        return ref != null && ref.isValid() ? ref : null;
     }
 
-    /** The block type in a loaded chunk; positions outside the build height read as empty. */
-    static BlockType blockType(BlockChunk chunk, int x, int y, int z) {
-        if (y < MIN_Y || y > MAX_Y) {
-            return BlockType.EMPTY;
+    /** The block type at a position, or null if its chunk section is not loaded. */
+    static BlockType blockType(World world, int x, int y, int z) {
+        Ref<ChunkStore> ref = section(world, x, y, z);
+        if (ref == null) {
+            return null;
         }
-        return BlockType.getAssetMap().getAsset(chunk.getBlock(x, y, z));
+        BlockSection blocks = world.getChunkStore().getStore().getComponent(ref, BlockSection.getComponentType());
+        if (blocks == null) {
+            return null;
+        }
+        BlockType type = BlockType.getAssetMap().getAsset(blocks.get(x, y, z));
+        return type == null ? BlockType.EMPTY : type;
+    }
+
+    /** Places a block. Returns false if the id is unknown or the chunk section is not loaded. */
+    static boolean setBlock(World world, int x, int y, int z, String blockTypeId) {
+        BlockType type = BlockType.getAssetMap().getAsset(blockTypeId);
+        Ref<ChunkStore> ref = section(world, x, y, z);
+        if (type == null || ref == null) {
+            return false;
+        }
+        int id = BlockType.getAssetMap().getIndex(blockTypeId);
+        return BlockOperations.setBlock(world.getChunkStore(), ref, x, y, z, id, type, 0, 0, 0);
+    }
+
+    /**
+     * Switches a block to one of its state variants ({@link #DEFAULT_STATE} for the normal look).
+     * Does nothing if the block already shows that state. Returns false if the section is not loaded.
+     */
+    static boolean setBlockState(World world, int x, int y, int z, String state) {
+        BlockType current = blockType(world, x, y, z);
+        Ref<ChunkStore> ref = section(world, x, y, z);
+        if (current == null || ref == null) {
+            return false;
+        }
+        String id = current.getId();
+        boolean showing = DEFAULT_STATE.equals(state)
+            ? id.equals(BlockEnergyRegistry.baseBlockId(id))
+            : id.endsWith("_State_Definitions_" + state);
+        if (!showing) {
+            BlockOperations.setBlockInteractionState(world.getChunkStore(), ref, x, y, z, current, state, true);
+        }
+        return true;
     }
 }

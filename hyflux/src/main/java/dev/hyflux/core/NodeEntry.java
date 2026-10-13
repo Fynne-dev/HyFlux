@@ -130,6 +130,17 @@ final class NodeEntry implements NodeContext {
     }
 
     @Override
+    public void setBlockState(String state) {
+        if (attached && blockTypeId != null) {
+            try {
+                world.host().setBlockState(pos, state == null ? "default" : state);
+            } catch (Throwable t) {
+                world.host().reportError("Could not set block state " + state + " at " + pos, t);
+            }
+        }
+    }
+
+    @Override
     public String toString() {
         return type.id() + "@" + pos;
     }

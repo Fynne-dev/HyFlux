@@ -3,13 +3,11 @@ package dev.hyflux.example;
 import com.hypixel.hytale.server.core.plugin.JavaPlugin;
 import com.hypixel.hytale.server.core.plugin.JavaPluginInit;
 import dev.hyflux.api.HyFlux;
-import dev.hyflux.api.node.BatteryNode;
-import dev.hyflux.api.node.CableNode;
 
 /**
- * Example mod built on HyFlux. Everything energy-related is one line per block in
- * {@link #setup()}: HyFlux creates the node when the block is placed, connects it to its
- * neighbours, ticks it, saves it and removes it when the block is broken.
+ * Example mod built on HyFlux. The cable, battery and lamp need no Java at all: they are
+ * declared in {@code hyflux.json} at the root of this jar. Only the generator, which has its
+ * own logic, is bound in code.
  */
 public final class HyFluxExamplePlugin extends JavaPlugin {
 
@@ -24,14 +22,7 @@ public final class HyFluxExamplePlugin extends JavaPlugin {
 
     @Override
     protected void setup() {
-        // Custom node classes, with their own stable node type ids.
         HyFlux.blocks().bind(GENERATOR, FluxGeneratorNode.TYPE);
-        HyFlux.blocks().bind(LAMP, LampNode.TYPE);
-
-        // Stock node classes need no subclass at all.
-        HyFlux.blocks().bind(CABLE, () -> new CableNode(256));
-        HyFlux.blocks().bind(BATTERY, () -> new BatteryNode(100_000, 500));
-
         getCommandRegistry().registerCommand(new DemoCommand());
     }
 }
